@@ -13,14 +13,13 @@ const (
 type Credential struct {
 	Provider CredentialProvider `json:"provider"`
 	Password string             `json:"password"`
-	Account  Account            `json:"account"`
 }
 
 type Account struct {
 	ID           primitive.ObjectID `json:"_id,omitempty"`
 	Username     string             `json:"username" binding:"required"`
 	Name         string             `json:"name" binding:"required"`
-	Age          int                `json:"age" binding:"required"`
+	Dob          primitive.DateTime `json:"dob" binding:"required"`
 	Gender       string             `json:"gender" binding:"required"`
 	Email        string             `json:"email" binding:"required"`
 	Phone        string             `json:"phone" binding:"required"`
@@ -28,6 +27,6 @@ type Account struct {
 	DistrictCode string             `json:"district_code"`
 	WardCode     string             `json:"ward_code"`
 	Address      string             `json:"address"`
-	Password     string             `json:"password" binding:"required"`
+	Password     string             `json:"password,omitempty" binding:"required"`
 	Credentials  []Credential       `json:"credentials"`
 }

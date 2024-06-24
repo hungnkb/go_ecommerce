@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +41,15 @@ func main() {
 				"message": error.Error(),
 			})
 		}
-		fmt.Println(body)
+		data := storage.InsertAccount(db, body)
+		if db != nil {
+			c.JSON(200, gin.H{
+				"data": data,
+			})
+		}
+		c.JSON(400, gin.H{
+			"message": "error",
+		})
 	})
 
 	PORT := os.Getenv("PORT")

@@ -3,11 +3,14 @@ package storage
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const DB = "ecommerce"
@@ -32,17 +35,37 @@ func GetAccountBy(client *mongo.Client, filter *models.Account) models.Account {
 	return result
 }
 
-func InsertAccount(client *mongo.Client, account models.Account) {
-	result, err := getColection(client, DB).InsertOne(context.TODO(), account)
-	if err != nil {
-		println(err.Error())
-	}
-	findQuery := bson.D{{"$or",
-		bson.D{
-			bson.D{{"username", account.Username}},
-			bson.D{{"email", account.Email}},
+func InsertAccount(client *mongo.Client, account models.Account) interface{} {
+	var result models.Account
+	findQuery := bson.D{primitive.E{Key: "$or",
+		Value: []interface{}{
+			bson.D{{Key: "username", Value: account.Username}},
+			bson.D{{Key: "email", Value: account.Email}},
+			bson.D{{Key: "phone", Value: account.Phone}},
 		},
 	}}
-	checkExist := getColection(client, DB).FindOne(context.TODO(), findQuery)
-	fmt.Println(result)
+	checkExistError := getColection(client, DB).FindOne(context.TODO(), findQuery).Decode(&result)
+	if checkExistError == nil {
+		fmt.Println(result)
+		return nil
+	}
+	fmt.Println(123123)
+	hashCost, _ := strconv.Atoi(os.Getenv("salt"))
+	hashPassword, hashError := bcrypt.GenerateFromPassword([]byte(account.Password), hashCost)
+	if hashError != nil {
+		return nil
+	}
+	credential := &models.Credential{
+		Provider: models.PASSWORD,
+		Password: string(hashPassword),
+	}
+	account.Password = ""
+	account.Credentials = []models.Credential{*credential}
+	fmt.Println(123123, account)
+	insertResult, insertError := getColection(client, DB).InsertOne(context.TODO(), &account)
+	if insertError != nil {
+		return nil
+	}
+	account.ID = insertResult.InsertedID.(primitive.ObjectID)
+	return account
 }
