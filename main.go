@@ -28,6 +28,7 @@ func main() {
 				"message": "ping",
 				"data":    data,
 			})
+			return
 		}
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -40,12 +41,14 @@ func main() {
 			c.JSON(400, gin.H{
 				"message": error.Error(),
 			})
+			return
 		}
 		data := storage.InsertAccount(db, body)
 		if db != nil {
 			c.JSON(200, gin.H{
 				"data": data,
 			})
+			return
 		}
 		c.JSON(400, gin.H{
 			"message": "error",

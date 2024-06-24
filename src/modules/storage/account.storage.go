@@ -13,10 +13,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const DB = "ecommerce"
+var DB = os.Getenv("MONGODB_DBNAME")
+
+const AccountCollectionName string = "accounts"
 
 func GetAccountList(client *mongo.Client) []models.Account {
-	cursor, error := client.Database(DB).Collection("accounts").Find(context.TODO(), models.Account{})
+	fmt.Println(DB)
+	cursor, error := client.Database(DB).Collection(AccountCollectionName).Find(context.TODO(), models.Account{})
 	if error != nil {
 		println(error.Error())
 		return nil
@@ -29,7 +32,7 @@ func GetAccountList(client *mongo.Client) []models.Account {
 	return result
 }
 
-func GetAccountBy(client *mongo.Client, filter *models.Account) models.Account {
+func GetAccountBy(client *mongo.Client, filter *bson.M) models.Account {
 	var result models.Account
 	getColection(client, DB).FindOne(context.TODO(), filter).Decode(&result)
 	return result
@@ -37,19 +40,16 @@ func GetAccountBy(client *mongo.Client, filter *models.Account) models.Account {
 
 func InsertAccount(client *mongo.Client, account models.Account) interface{} {
 	var result models.Account
-	findQuery := bson.D{primitive.E{Key: "$or",
-		Value: []interface{}{
-			bson.D{{Key: "username", Value: account.Username}},
-			bson.D{{Key: "email", Value: account.Email}},
-			bson.D{{Key: "phone", Value: account.Phone}},
-		},
-	}}
+	fmt.Println(account.Username)
+	findQuery := bson.M{"$or": []interface{}{
+		bson.M{"username": account.Username},
+		bson.M{"email": account.Email},
+		bson.M{"phone": account.Phone}}}
+
 	checkExistError := getColection(client, DB).FindOne(context.TODO(), findQuery).Decode(&result)
 	if checkExistError == nil {
-		fmt.Println(result)
 		return nil
 	}
-	fmt.Println(123123)
 	hashCost, _ := strconv.Atoi(os.Getenv("salt"))
 	hashPassword, hashError := bcrypt.GenerateFromPassword([]byte(account.Password), hashCost)
 	if hashError != nil {
@@ -61,8 +61,7 @@ func InsertAccount(client *mongo.Client, account models.Account) interface{} {
 	}
 	account.Password = ""
 	account.Credentials = []models.Credential{*credential}
-	fmt.Println(123123, account)
-	insertResult, insertError := getColection(client, DB).InsertOne(context.TODO(), &account)
+	insertResult, insertError := getColection(client, AccountCollectionName).InsertOne(context.TODO(), &account)
 	if insertError != nil {
 		return nil
 	}

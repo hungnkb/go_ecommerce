@@ -9,8 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var client *mongo.Client
-
 func NewMongoStorage() *mongo.Client {
 	mongodbUrl := os.Getenv("MONGODB_URL")
 	var ctx = context.TODO()
