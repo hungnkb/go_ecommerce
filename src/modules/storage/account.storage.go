@@ -6,6 +6,9 @@ import (
 	"os"
 	"strconv"
 
+	httpMessage "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-error-message"
+	httpStatusCode "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-status"
+	responseType "github.com/hungnkb/go_ecommerce/src/common/types"
 	"github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,13 +16,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var DB = os.Getenv("MONGODB_DBNAME")
-
-const AccountCollectionName string = "accounts"
+var DB = os.Getenv("DB_NAME")
+var accountCollection = "accounts"
 
 func GetAccountList(client *mongo.Client) []models.Account {
-	fmt.Println(DB)
-	cursor, error := client.Database(DB).Collection(AccountCollectionName).Find(context.TODO(), models.Account{})
+	cursor, error := client.Database(DB).Collection(accountCollection).Find(context.TODO(), models.Account{})
 	if error != nil {
 		println(error.Error())
 		return nil
@@ -38,22 +39,31 @@ func GetAccountBy(client *mongo.Client, filter *bson.M) models.Account {
 	return result
 }
 
-func InsertAccount(client *mongo.Client, account models.Account) interface{} {
+func InsertAccount(client *mongo.Client, account models.Account) responseType.StorageReponseType {
 	var result models.Account
-	fmt.Println(account.Username)
-	findQuery := bson.M{"$or": []interface{}{
-		bson.M{"username": account.Username},
-		bson.M{"email": account.Email},
-		bson.M{"phone": account.Phone}}}
-
-	checkExistError := getColection(client, DB).FindOne(context.TODO(), findQuery).Decode(&result)
+	findQuery := bson.D{primitive.E{Key: "$or",
+		Value: []interface{}{
+			bson.D{{Key: "username", Value: account.Username}},
+			bson.D{{Key: "email", Value: account.Email}},
+			bson.D{{Key: "phone", Value: account.Phone}},
+		},
+	}}
+	checkExistError := getColection(client, accountCollection).FindOne(context.TODO(), findQuery).Decode(&result)
 	if checkExistError == nil {
-		return nil
+		fmt.Println("InsertAccount/checkExistError", result)
+		return responseType.StorageReponseType{
+			Error:          string(httpMessage.ERROR_ACCOUNT_EXIST),
+			HttpStatusCode: int(httpStatusCode.CONFLICT),
+		}
 	}
 	hashCost, _ := strconv.Atoi(os.Getenv("salt"))
 	hashPassword, hashError := bcrypt.GenerateFromPassword([]byte(account.Password), hashCost)
 	if hashError != nil {
-		return nil
+		fmt.Println("InsertAccount/hashError", hashError.Error())
+		return responseType.StorageReponseType{
+			Error:          "Hash password failed",
+			HttpStatusCode: int(httpStatusCode.OK),
+		}
 	}
 	credential := &models.Credential{
 		Provider: models.PASSWORD,
@@ -61,10 +71,16 @@ func InsertAccount(client *mongo.Client, account models.Account) interface{} {
 	}
 	account.Password = ""
 	account.Credentials = []models.Credential{*credential}
-	insertResult, insertError := getColection(client, AccountCollectionName).InsertOne(context.TODO(), &account)
+	insertResult, insertError := getColection(client, accountCollection).InsertOne(context.TODO(), &account)
 	if insertError != nil {
-		return nil
+		fmt.Println("InsertAccount/insertError", insertError.Error())
+		return responseType.StorageReponseType{
+			Error:          "Something went wrong",
+			HttpStatusCode: 400,
+		}
 	}
 	account.ID = insertResult.InsertedID.(primitive.ObjectID)
-	return account
+	return responseType.StorageReponseType{
+		Data: account,
+	}
 }
