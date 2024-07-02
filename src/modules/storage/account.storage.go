@@ -3,11 +3,11 @@ package storage
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 
 	httpMessage "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-error-message"
-	httpStatusCode "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-status"
 	responseType "github.com/hungnkb/go_ecommerce/src/common/types"
 	"github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,9 +33,9 @@ func GetAccountList(client *mongo.Client) []models.Account {
 	return result
 }
 
-func GetAccountBy(client *mongo.Client, filter *models.Account) models.Account {
+func GetAccountBy(client *mongo.Client, filter bson.D) models.Account {
 	var result models.Account
-	getColection(client, DB).FindOne(context.TODO(), filter).Decode(&result)
+	getColection(client, accountCollection).FindOne(context.TODO(), filter).Decode(&result)
 	return result
 }
 
@@ -53,7 +53,7 @@ func InsertAccount(client *mongo.Client, account models.Account) responseType.St
 		fmt.Println("InsertAccount/checkExistError", result)
 		return responseType.StorageReponseType{
 			Error:          string(httpMessage.ERROR_ACCOUNT_EXIST),
-			HttpStatusCode: int(httpStatusCode.CONFLICT),
+			HttpStatusCode: http.StatusConflict,
 		}
 	}
 	hashCost, _ := strconv.Atoi(os.Getenv("salt"))
@@ -62,7 +62,7 @@ func InsertAccount(client *mongo.Client, account models.Account) responseType.St
 		fmt.Println("InsertAccount/hashError", hashError.Error())
 		return responseType.StorageReponseType{
 			Error:          "Hash password failed",
-			HttpStatusCode: int(httpStatusCode.OK),
+			HttpStatusCode: http.StatusOK,
 		}
 	}
 	credential := &models.Credential{
@@ -76,7 +76,7 @@ func InsertAccount(client *mongo.Client, account models.Account) responseType.St
 		fmt.Println("InsertAccount/insertError", insertError.Error())
 		return responseType.StorageReponseType{
 			Error:          "Something went wrong",
-			HttpStatusCode: 400,
+			HttpStatusCode: http.StatusBadRequest,
 		}
 	}
 	account.ID = insertResult.InsertedID.(primitive.ObjectID)

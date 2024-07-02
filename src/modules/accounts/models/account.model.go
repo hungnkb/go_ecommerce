@@ -16,7 +16,7 @@ type Credential struct {
 }
 
 type Account struct {
-	ID           primitive.ObjectID `json:"_id,omitempty"`
+	ID           primitive.ObjectID `json:"id,omitempty" bson:"_id"`
 	Username     string             `json:"username" binding:"required"`
 	Name         string             `json:"name" binding:"required"`
 	Dob          primitive.DateTime `json:"dob" binding:"required"`
