@@ -12,12 +12,12 @@ import (
 
 func main() {
 	godotenv.Load()
-
+	gin.ForceConsoleColor()
 	r := gin.Default()
 
 	db := storage.NewMongoStorage()
-
-	v1 := r.Group("/v1")
+	api := r.Group("/api")
+	v1 := api.Group("/v1")
 	accountController.Account(db, v1)
 	authController.Auth(db, v1)
 
