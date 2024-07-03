@@ -22,7 +22,7 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_MISSING_INVALID_TOKEN,
 			})
-			c.Err()
+			c.Abort()
 		}
 		authorization := c.Request.Header["Authorization"][0]
 		token := strings.SplitAfter(authorization, "Bearer ")
@@ -31,15 +31,15 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_MISSING_INVALID_TOKEN,
 			})
-			c.Err()
+			c.Abort()
 		}
-		payload, error := authService.AccessTokenVerify(string(token[1]))
-		if error != nil {
+		payload, verifyError := authService.AccessTokenVerify(string(token[1]))
+		if verifyError != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_MISSING_INVALID_TOKEN,
 			})
-			c.Err()
+			c.Abort()
 		}
 		exp := payload["exp"]
 		id := payload["sub"]
@@ -48,7 +48,7 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_EXPIRED_TOKEN,
 			})
-			c.Err()
+			c.Abort()
 		}
 		objectId, err := primitive.ObjectIDFromHex(id.(string))
 		if err != nil {
@@ -56,7 +56,7 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_MISSING_INVALID_TOKEN,
 			})
-			return
+			c.Abort()
 		}
 		account := accountStorage.GetAccountBy(db, bson.D{{Key: "_id", Value: objectId}})
 		if account.Email == "" {
@@ -64,7 +64,7 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_ACCOUNT_NOT_FOUND,
 			})
-			return
+			c.Abort()
 		}
 		c.Set("account", account)
 		c.Next()

@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	// "go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -29,14 +29,26 @@ func GetAccountList(client *mongo.Client, filter bson.D, page int64, limit int64
 	if limit == 0 {
 		limit = 100
 	}
-	skip := limit * (page - 1)
-	options := options.Find().SetLimit(limit).SetSkip(skip)
-	cursor, error := client.Database(DB).Collection(accountCollection).Find(context.TODO(), filter, options)
+	// skip := limit * (page - 1)
+	// options := options.Find().SetLimit(limit).SetSkip(skip)
+	aggregate := []bson.M{
+		{
+			"$lookup": bson.M{
+				"from":         "permissions",
+				"localField":   "permission_ids",
+				"foreignField": "_id",
+				"as":           "permissions",
+			},
+		},
+	}
+	cursor, error := client.Database(DB).Collection(accountCollection).Aggregate(context.TODO(), aggregate)
+	// fmt.Println(cursor.All())
 	if error != nil {
 		println(error.Error())
 		return responseType.StorageReponseType{
-			Data:  nil,
-			Error: error.Error(),
+			Data:           nil,
+			Error:          error.Error(),
+			HttpStatusCode: http.StatusBadRequest,
 		}
 	}
 	var result []accountModel.Account
@@ -76,6 +88,7 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 			HttpStatusCode: http.StatusConflict,
 		}
 	}
+
 	hashCost := Config.Get().Salt
 	hashPassword, hashError := bcrypt.GenerateFromPassword([]byte(account.Password), hashCost)
 	if hashError != nil {
@@ -89,6 +102,15 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 		Provider: accountModel.PASSWORD,
 		Password: string(hashPassword),
 	}
+
+	var userPermission accountModel.Permission
+	if len(account.PermissionIDs) == 0 {
+		getColection(client, permissionCollection).FindOne(context.TODO(), bson.D{{Key: "key", Value: "user"}}).Decode(&userPermission)
+		if objectId, err := primitive.ObjectIDFromHex(userPermission.ID); err == nil {
+			account.PermissionIDs = append(account.PermissionIDs, objectId)
+		}
+	}
+
 	account.Password = ""
 	account.Credentials = []accountModel.Credential{*credential}
 	account.CreatedAt = primitive.DateTime(time.Now().UnixMilli())
@@ -102,8 +124,7 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 		}
 	}
 	account.ID = insertResult.InsertedID.(primitive.ObjectID)
-	fmt.Println(insertResult.InsertedID.(primitive.ObjectID))
-	fmt.Println(account)
+	account.Permissions = append(account.Permissions, userPermission)
 	return responseType.StorageReponseType{
 		Data: account,
 	}
@@ -117,7 +138,9 @@ func InsertPermissionBulk(client *mongo.Client, input []accountModel.Permission)
 		}
 	}
 	check := getColection(client, permissionCollection).FindOne(context.TODO(), bson.D{{
-		Key: "key", Value: listKey,
+		Key: "key", Value: bson.D{
+			{Key: "$in", Value: listKey},
+		},
 	}})
 	if check.Err() == nil {
 		return responseType.StorageReponseType{
@@ -127,15 +150,21 @@ func InsertPermissionBulk(client *mongo.Client, input []accountModel.Permission)
 	}
 
 	var data []accountModel.Permission
-	res, error := getColection(client, permissionCollection).InsertMany(context.TODO(), input.([]interface{}))
+	formatInput := make([]interface{}, 0)
+	for _, v := range input {
+		formatInput = append(formatInput, v)
+	}
+	res, error := getColection(client, permissionCollection).InsertMany(context.TODO(), formatInput)
 	if error != nil {
 		return responseType.StorageReponseType{
 			HttpStatusCode: http.StatusBadRequest,
 			Error:          error.Error(),
 		}
 	}
-	fmt.Println(res.InsertedIDs)
-
+	if cur, err := getColection(client, permissionCollection).Find(context.TODO(), bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: res.InsertedIDs}}}}); err == nil {
+		cur.All(context.TODO(), &data)
+	}
+	fmt.Println(data)
 	return responseType.StorageReponseType{
 		Data: data,
 	}

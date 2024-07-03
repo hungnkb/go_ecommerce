@@ -2,6 +2,7 @@ package accountService
 
 import (
 	"math/rand"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -21,13 +22,13 @@ func GetList(db *mongo.Client) gin.HandlerFunc {
 		filter := bson.D{{}}
 		res := accountStorage.GetAccountList(db, filter, int64(page), int64(limit))
 		if res.Error == "" {
-			c.JSON(200, gin.H{
-				"message": "ping",
-				"data":    res.Data,
+			c.JSON(http.StatusOK, gin.H{
+				"status": http.StatusOK,
+				"data":   res.Data,
 			})
 			return
 		} else {
-			c.JSON(200, gin.H{
+			c.JSON(res.HttpStatusCode, gin.H{
 				"message": res.Error,
 				"data":    nil,
 			})
@@ -75,6 +76,17 @@ func CreatePermission(db *mongo.Client) gin.HandlerFunc {
 			})
 			return
 		}
-		accountStorage.InsertPermissionBulk(db, body)
+		res := accountStorage.InsertPermissionBulk(db, body)
+		if res.Error != "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  res.HttpStatusCode,
+				"message": res.Error,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   res.Data,
+		})
 	}
 }
