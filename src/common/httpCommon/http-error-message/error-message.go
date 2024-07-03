@@ -8,5 +8,6 @@ const (
 	ERROR_ACCOUNT_WRONG_PASSWORD              = "Wrong password"
 	ERROR_ACCOUNT_NOT_FOUND                   = "Account not found"
 	ERROR_MISSING_INVALID_TOKEN               = "Missing or invalid token"
-	ERROR_EXPIRED_TOKEN                           = "Token expired"
+	ERROR_EXPIRED_TOKEN                       = "Token expired"
+	ERROR_PERMISSION_KEY_EXIST                = "Permission key exist"
 )

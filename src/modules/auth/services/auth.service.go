@@ -3,16 +3,16 @@ package authService
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	httpMessage "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-error-message"
 	httpStatusCode "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-status"
-	"github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
+	Config "github.com/hungnkb/go_ecommerce/src/config"
+	"github.com/hungnkb/go_ecommerce/src/modules/accountStorage"
+	"github.com/hungnkb/go_ecommerce/src/modules/accounts/accountModel"
 	authDto "github.com/hungnkb/go_ecommerce/src/modules/auth/dto"
-	"github.com/hungnkb/go_ecommerce/src/modules/storage"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -20,7 +20,7 @@ import (
 
 func Register(db *mongo.Client) gin.HandlerFunc {
 	fn := func(c *gin.Context) {
-		var body models.Account
+		var body accountModel.Account
 		if error := c.ShouldBind(&body); error != nil {
 			c.JSON(400, gin.H{
 				"message": error.Error(),
@@ -28,7 +28,7 @@ func Register(db *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		data := storage.InsertAccount(db, body)
+		data := accountStorage.InsertAccount(db, body)
 		if data.Data != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"status": http.StatusOK,
@@ -53,7 +53,7 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 			})
 		}
 
-		data := storage.GetAccountBy(db, bson.D{{Key: "username", Value: body.Username}})
+		data := accountStorage.GetAccountBy(db, bson.D{{Key: "username", Value: body.Username}})
 		if data.Email == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  httpStatusCode.UNAUTHORIZED,
@@ -63,7 +63,7 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 		}
 		var hasedPassword []byte
 		for i := range data.Credentials {
-			if int(data.Credentials[i].Provider) == int(models.PASSWORD) {
+			if int(data.Credentials[i].Provider) == int(accountModel.PASSWORD) {
 				hasedPassword = []byte(data.Credentials[i].Password)
 				break
 			}
@@ -91,7 +91,7 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 }
 
 func AccessTokenVerify(tokenString string) (jwt.MapClaims, error) {
-	secretKey := os.Getenv("SECRET_KEY")
+	secretKey := Config.Get().SecretKey
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
@@ -101,9 +101,9 @@ func AccessTokenVerify(tokenString string) (jwt.MapClaims, error) {
 	return nil, err
 }
 
-func AccessTokenGenerator(data models.Account) (string, error) {
+func AccessTokenGenerator(data accountModel.Account) (string, error) {
 	aWeekHour := 24 * 7
-	secretKey := os.Getenv("SECRET_KEY")
+	secretKey := Config.Get().SecretKey
 	fmt.Println(data)
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": data.ID,

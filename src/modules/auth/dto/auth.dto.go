@@ -1,6 +1,6 @@
 package authDto
 
-import "github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
+import "github.com/hungnkb/go_ecommerce/src/modules/accounts/accountModel"
 
 type Login struct {
 	Username string `json:"username" binding:"required"`
@@ -8,7 +8,7 @@ type Login struct {
 }
 
 type LoginReponse struct {
-	AccessToken  string         `json:"accessToken"`
-	RefreshToken string         `json:"refreshToken"`
-	Account      models.Account `json:"account"`
+	AccessToken  string               `json:"accessToken"`
+	RefreshToken string               `json:"refreshToken"`
+	Account      accountModel.Account `json:"account"`
 }
