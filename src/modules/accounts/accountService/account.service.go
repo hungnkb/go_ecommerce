@@ -19,7 +19,7 @@ func GetList(db *mongo.Client) gin.HandlerFunc {
 	fn := func(c *gin.Context) {
 		page, _ := strconv.Atoi(c.Query("page"))
 		limit, _ := strconv.Atoi(c.Query("limit"))
-		filter := bson.D{{}}
+		filter := bson.M{}
 		res := accountStorage.GetAccountList(db, filter, int64(page), int64(limit))
 		if res.Error == "" {
 			c.JSON(http.StatusOK, gin.H{

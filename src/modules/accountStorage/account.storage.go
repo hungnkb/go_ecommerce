@@ -14,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	// "go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,27 +21,31 @@ var DB = Config.Get().DbName
 var accountCollection = "accounts"
 var permissionCollection = "permissions"
 
-func GetAccountList(client *mongo.Client, filter bson.D, page int64, limit int64) responseType.StorageReponseType {
+func GetAccountList(client *mongo.Client, filter bson.M, page int64, limit int64) responseType.StorageReponseType {
 	if page == 0 {
 		page = 1
 	}
 	if limit == 0 {
 		limit = 100
 	}
-	// skip := limit * (page - 1)
-	// options := options.Find().SetLimit(limit).SetSkip(skip)
-	aggregate := []bson.M{
-		{
-			"$lookup": bson.M{
-				"from":         "permissions",
-				"localField":   "permission_ids",
-				"foreignField": "_id",
-				"as":           "permissions",
-			},
-		},
-	}
-	cursor, error := client.Database(DB).Collection(accountCollection).Aggregate(context.TODO(), aggregate)
-	// fmt.Println(cursor.All())
+	skip := limit * (page - 1)
+	lookupStage := bson.D{{Key: "$lookup", Value: bson.D{{
+		Key:   "from",
+		Value: "permissions",
+	}, {
+		Key:   "localField",
+		Value: "permission_ids",
+	}, {
+		Key:   "foreignField",
+		Value: "_id",
+	}, {
+		Key:   "as",
+		Value: "permissions",
+	}},
+	}}
+	skipStage := bson.D{{Key: "$skip", Value: skip}}
+	limitStage := bson.D{{Key: "$limit", Value: limit}}
+	cursor, error := client.Database(DB).Collection(accountCollection).Aggregate(context.TODO(), mongo.Pipeline{lookupStage, skipStage, limitStage})
 	if error != nil {
 		println(error.Error())
 		return responseType.StorageReponseType{

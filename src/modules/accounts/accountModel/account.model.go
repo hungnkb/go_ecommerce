@@ -33,7 +33,7 @@ type Account struct {
 	IsShop        bool                 `json:"is_shop"`
 	CreatedAt     primitive.DateTime   `json:"createdAt" bson:"created_at"`
 	UpdatedAt     primitive.DateTime   `json:"updatedAt" bson:"updated_at"`
-	Credentials   []Credential         `json:"credentials"`
+	Credentials   []Credential         `json:"-"`
 	PermissionIDs []primitive.ObjectID `json:"permissionIds,omitempty" bson:"permission_ids,omitempty"`
 	Permissions   []Permission         `json:"permissions"`
 }

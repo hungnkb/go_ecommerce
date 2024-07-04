@@ -62,7 +62,7 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 		if account.Email == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  http.StatusUnauthorized,
-				"message": httpMessage.ERROR_ACCOUNT_NOT_FOUND,
+				"message": httpMessage.ERROR_UNAUTHORIZED,
 			})
 			c.Abort()
 		}

@@ -10,4 +10,5 @@ const (
 	ERROR_MISSING_INVALID_TOKEN               = "Missing or invalid token"
 	ERROR_EXPIRED_TOKEN                       = "Token expired"
 	ERROR_PERMISSION_KEY_EXIST                = "Permission key exist"
+	ERROR_UNAUTHORIZED                        = "Unauthorized"
 )
