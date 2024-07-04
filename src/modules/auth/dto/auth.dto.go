@@ -1,6 +1,7 @@
 package authDto
 
-import "github.com/hungnkb/go_ecommerce/src/modules/accounts/accountModel"
+import accountModel "github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
+
 
 type Login struct {
 	Username string `json:"username" binding:"required"`
