@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	Config "github.com/hungnkb/go_ecommerce/src/config"
-	accountController "github.com/hungnkb/go_ecommerce/src/modules/accounts/controller"
-	authController "github.com/hungnkb/go_ecommerce/src/modules/auth/authControllers"
+	accountController "github.com/hungnkb/go_ecommerce/src/modules/accounts/controllers"
+	authController "github.com/hungnkb/go_ecommerce/src/modules/auth/controllers"
 	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/storages"
 	"github.com/joho/godotenv"
 )

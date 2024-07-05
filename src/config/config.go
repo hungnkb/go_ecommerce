@@ -11,7 +11,7 @@ type Config struct {
 	MongoDbUrl string `env:"MONGODB_URL" envDefault:"mongodb://root:123456@localhost:27017"`
 	DbName     string `env:"DB_NAME" envDefault:"ecommerce"`
 	SecretKey  string `env:"SECRET_KEY" envDefault:"doanxem123"`
-	Salt       int    `env:"SALE" envDefault:"10"`
+	Salt       int    `env:"SALT" envDefault:"10"`
 }
 
 func Get() (cfg Config) {
