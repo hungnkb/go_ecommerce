@@ -2,14 +2,18 @@ package productController
 
 import (
 	"github.com/gin-gonic/gin"
+	middleware "github.com/hungnkb/go_ecommerce/src/middlewares"
+	productHandler "github.com/hungnkb/go_ecommerce/src/modules/products/handlers"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func Product(db *mongo.Client, r *gin.RouterGroup) {
 	productRoute := r.Group("/products")
-	productRoute.POST("/")
+	productRoute.POST("/", middleware.AuthGuard(db), productHandler.Create(db))
 	productRoute.GET("/")
 	productRoute.GET("/:id")
 	productRoute.PUT("/:id")
 	productRoute.DELETE("/")
+
+	productRoute.POST("/atributes", middleware.AuthGuard(db), productHandler.Create(db))
 }

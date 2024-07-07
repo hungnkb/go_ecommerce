@@ -3,7 +3,7 @@ package accountController
 import (
 	"github.com/gin-gonic/gin"
 	middleware "github.com/hungnkb/go_ecommerce/src/middlewares"
-	accountService "github.com/hungnkb/go_ecommerce/src/modules/accounts/services"
+	accountService "github.com/hungnkb/go_ecommerce/src/modules/accounts/accountHandler"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

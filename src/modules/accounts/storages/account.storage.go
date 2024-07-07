@@ -12,13 +12,13 @@ import (
 	responseType "github.com/hungnkb/go_ecommerce/src/common/types"
 	Config "github.com/hungnkb/go_ecommerce/src/config"
 	accountModel "github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
+	"github.com/hungnkb/go_ecommerce/src/modules/storage"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var DB = Config.Get().DbName
 var accountCollection = "accounts"
 var permissionCollection = "permissions"
 
@@ -51,7 +51,7 @@ func GetAccountList(client *mongo.Client, filter bson.M, page int64, limit int64
 	skipStage := bson.D{{Key: "$skip", Value: skip}}
 	limitStage := bson.D{{Key: "$limit", Value: limit}}
 	searchStage := bson.D{{Key: "$match", Value: searchParsed}}
-	cursor, error := client.Database(DB).Collection(accountCollection).Aggregate(context.TODO(), mongo.Pipeline{lookupStage, skipStage, limitStage, searchStage})
+	cursor, error := client.Database(storage.DB).Collection(accountCollection).Aggregate(context.TODO(), mongo.Pipeline{lookupStage, skipStage, limitStage, searchStage})
 	if error != nil {
 		println(error.Error())
 		return responseType.StorageReponseType{
@@ -76,7 +76,7 @@ func GetAccountList(client *mongo.Client, filter bson.M, page int64, limit int64
 
 func GetAccountBy(client *mongo.Client, filter bson.D) accountModel.Account {
 	var result accountModel.Account
-	getColection(client, accountCollection).FindOne(context.TODO(), filter).Decode(&result)
+	storage.GetColection(client, accountCollection).FindOne(context.TODO(), filter).Decode(&result)
 	return result
 }
 
@@ -89,7 +89,7 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 			bson.D{{Key: "phone", Value: account.Phone}},
 		},
 	}}
-	checkExistError := getColection(client, accountCollection).FindOne(context.TODO(), findQuery).Decode(&result)
+	checkExistError := storage.GetColection(client, accountCollection).FindOne(context.TODO(), findQuery).Decode(&result)
 	if checkExistError == nil {
 		fmt.Println("InsertAccount/checkExistError", result)
 		return responseType.StorageReponseType{
@@ -114,7 +114,7 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 
 	var userPermission accountModel.Permission
 	if len(account.PermissionIDs) == 0 {
-		getColection(client, permissionCollection).FindOne(context.TODO(), bson.D{{Key: "key", Value: "user"}}).Decode(&userPermission)
+		storage.GetColection(client, permissionCollection).FindOne(context.TODO(), bson.D{{Key: "key", Value: "user"}}).Decode(&userPermission)
 		if objectId, err := primitive.ObjectIDFromHex(userPermission.ID); err == nil {
 			account.PermissionIDs = append(account.PermissionIDs, objectId)
 		}
@@ -124,7 +124,7 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 	account.Credentials = []accountModel.Credential{*credential}
 	account.CreatedAt = primitive.DateTime(time.Now().UnixMilli())
 	account.UpdatedAt = primitive.DateTime(time.Now().UnixMilli())
-	insertResult, insertError := getColection(client, accountCollection).InsertOne(context.TODO(), &account)
+	insertResult, insertError := storage.GetColection(client, accountCollection).InsertOne(context.TODO(), &account)
 	if insertError != nil {
 		fmt.Println("InsertAccount/insertError", insertError.Error())
 		return responseType.StorageReponseType{
@@ -146,7 +146,7 @@ func InsertPermissionBulk(client *mongo.Client, input []accountModel.Permission)
 			listKey = append(listKey, input[i].Key)
 		}
 	}
-	check := getColection(client, permissionCollection).FindOne(context.TODO(), bson.D{{
+	check := storage.GetColection(client, permissionCollection).FindOne(context.TODO(), bson.D{{
 		Key: "key", Value: bson.D{
 			{Key: "$in", Value: listKey},
 		},
@@ -163,14 +163,14 @@ func InsertPermissionBulk(client *mongo.Client, input []accountModel.Permission)
 	for _, v := range input {
 		formatInput = append(formatInput, v)
 	}
-	res, error := getColection(client, permissionCollection).InsertMany(context.TODO(), formatInput)
+	res, error := storage.GetColection(client, permissionCollection).InsertMany(context.TODO(), formatInput)
 	if error != nil {
 		return responseType.StorageReponseType{
 			HttpStatusCode: http.StatusBadRequest,
 			Error:          error.Error(),
 		}
 	}
-	if cur, err := getColection(client, permissionCollection).Find(context.TODO(), bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: res.InsertedIDs}}}}); err == nil {
+	if cur, err := storage.GetColection(client, permissionCollection).Find(context.TODO(), bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: res.InsertedIDs}}}}); err == nil {
 		cur.All(context.TODO(), &data)
 	}
 	fmt.Println(data)

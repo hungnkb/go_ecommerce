@@ -1,4 +1,4 @@
-package accountStorage
+package storage
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var DB = Config.Get().DbName
 
 func NewMongoStorage() *mongo.Client {
 	mongodbUrl := Config.Get().MongoDbUrl
@@ -27,7 +29,7 @@ func NewMongoStorage() *mongo.Client {
 	return client
 }
 
-func getColection(client *mongo.Client, collectionName string) *mongo.Collection {
+func GetColection(client *mongo.Client, collectionName string) *mongo.Collection {
 	collection := client.Database(DB).Collection(collectionName)
 	return collection
 }

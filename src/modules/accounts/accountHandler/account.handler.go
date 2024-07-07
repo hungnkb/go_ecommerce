@@ -1,4 +1,4 @@
-package accountService
+package accountHandler
 
 import (
 	"math/rand"
@@ -9,7 +9,7 @@ import (
 	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/gin-gonic/gin"
 	accountModel "github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
-	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/storages"
+	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/accounts/storages"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

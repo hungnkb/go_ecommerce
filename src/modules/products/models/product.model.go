@@ -6,8 +6,9 @@ import (
 )
 
 type ProductAttribute struct {
-	ID   primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Name string             `json:"name"`
+	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Name      string             `json:"name"`
+	AccountId primitive.ObjectID `json:"accountId" bson:"account_id`
 }
 
 type ProductMetadata struct {
@@ -21,11 +22,15 @@ type ProductMetadata struct {
 	DocumentId   primitive.ObjectID     `json:"documentId" bson:"document_id"`
 	Document     documentModel.Document `json:"-"`
 	IsThumbnail  bool                   `json:"isThumbnail" bson:"is_thumbnail"`
+	Quantity     int                    `json:"quantity" bson:"quantity"`
 }
 
 type Product struct {
-	ID    primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Name  string             `json:"name" binding:"required"`
-	Slug  string             `json:"slug"`
-	Price float64            `json:"price" binding:"required"`
+	ID              primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Name            string             `json:"name" binding:"required"`
+	Slug            string             `json:"slug"`
+	Price           float64            `json:"price"`
+	AccountId       primitive.ObjectID `json:"accountId" bson:"account_id"`
+	ProductMetadata []ProductMetadata  `json:"-"`
+	Quantity        int                `json:"quantity,omitempty" bson:"-"`
 }

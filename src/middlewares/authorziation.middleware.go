@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	httpMessage "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-error-message"
-	authService "github.com/hungnkb/go_ecommerce/src/modules/auth/services"
-	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/storages"
+	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/accounts/storages"
+	authService "github.com/hungnkb/go_ecommerce/src/modules/auth/authHandler"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

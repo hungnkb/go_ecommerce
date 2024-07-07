@@ -1,4 +1,4 @@
-package authService
+package authHandler
 
 import (
 	"fmt"
@@ -11,8 +11,8 @@ import (
 	httpStatusCode "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-status"
 	Config "github.com/hungnkb/go_ecommerce/src/config"
 	accountModel "github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
+	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/accounts/storages"
 	authDto "github.com/hungnkb/go_ecommerce/src/modules/auth/dto"
-	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/storages"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
