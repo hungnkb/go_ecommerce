@@ -15,5 +15,6 @@ func Product(db *mongo.Client, r *gin.RouterGroup) {
 	productRoute.PUT("/:id")
 	productRoute.DELETE("/")
 
-	productRoute.POST("/atributes", middleware.AuthGuard(db), productHandler.Create(db))
+	productRoute.POST("/attributes", middleware.AuthGuard(db), productHandler.CreateAttributeBulk(db))
+	productRoute.GET("/attributes", middleware.AuthGuard(db), productHandler.CreateAttributeBulk(db))
 }

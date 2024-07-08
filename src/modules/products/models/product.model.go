@@ -8,7 +8,7 @@ import (
 type ProductAttribute struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 	Name      string             `json:"name"`
-	AccountId primitive.ObjectID `json:"accountId" bson:"account_id`
+	AccountId primitive.ObjectID `json:"accountId" bson:"account_id"`
 }
 
 type ProductMetadata struct {
@@ -30,6 +30,7 @@ type Product struct {
 	Name            string             `json:"name" binding:"required"`
 	Slug            string             `json:"slug"`
 	Price           float64            `json:"price"`
+	Description     string             `json:"description"`
 	AccountId       primitive.ObjectID `json:"accountId" bson:"account_id"`
 	ProductMetadata []ProductMetadata  `json:"-"`
 	Quantity        int                `json:"quantity,omitempty" bson:"-"`

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	httpMessage "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-error-message"
 	accountStorage "github.com/hungnkb/go_ecommerce/src/modules/accounts/storages"
-	authService "github.com/hungnkb/go_ecommerce/src/modules/auth/authHandler"
+	authService "github.com/hungnkb/go_ecommerce/src/modules/auth/handlers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -58,15 +58,23 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 			})
 			c.Abort()
 		}
-		account := accountStorage.GetAccountBy(db, bson.D{{Key: "_id", Value: objectId}})
-		if account.Email == "" {
+		filterStage := bson.D{
+			{
+				Key:   "$match",
+				Value: bson.D{{Key: "_id", Value: objectId}},
+			},
+		}
+		var stages []bson.D
+		stages = append(stages, filterStage)
+		account := accountStorage.GetAccountBy(db, stages)
+		if account[0].Email == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_UNAUTHORIZED,
 			})
 			c.Abort()
 		}
-		c.Set("account", account)
+		c.Set("account", account[0])
 		c.Next()
 	}
 }

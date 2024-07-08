@@ -91,3 +91,14 @@ func CreatePermission(db *mongo.Client) gin.HandlerFunc {
 		})
 	}
 }
+
+func GetMe(db *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		currentAccount, _ := c.Get("account")
+		account := currentAccount.(accountModel.Account)
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"data":   account,
+		})
+	}
+}

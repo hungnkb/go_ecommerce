@@ -73,18 +73,19 @@ func InsertAttributeBulk(db *mongo.Client, input []productModel.ProductAttribute
 		inputFormat = append(inputFormat, item)
 	}
 	res, err := storage.GetColection(db, attributeCollectionName).InsertMany(context.TODO(), inputFormat)
-	if err == nil {
+	if err != nil {
 		return responseType.StorageReponseType{
 			Error:          httpMessage.ERROR_INSERT_PRODUCT_ATTRIBUTE,
 			HttpStatusCode: http.StatusBadRequest,
 		}
 	}
 	var attributes []productModel.ProductAttribute
-	filter := bson.D{{Key: "$_id", Value: bson.D{{Key: "_id", Value: res.InsertedIDs}}}}
-	cur, errCur := storage.GetColection(db, attributeCollectionName).Find(context.TODO(), filter)
-	if errCur != nil {
-		cur.All(context.TODO(), attributes)
+	filter := bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: res.InsertedIDs}}}}
+	cur, errFind := storage.GetColection(db, attributeCollectionName).Find(context.TODO(), filter)
+	if errFind == nil {
+		cur.All(context.TODO(), &attributes)
 	}
+	fmt.Println(attributes)
 	return responseType.StorageReponseType{
 		Data:           attributes,
 		Error:          "",

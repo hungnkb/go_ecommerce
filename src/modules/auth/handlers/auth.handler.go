@@ -52,9 +52,10 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 				"message": error.Error(),
 			})
 		}
-
-		data := accountStorage.GetAccountBy(db, bson.D{{Key: "username", Value: body.Username}})
-		if data.Email == "" {
+		var stages []bson.D
+		stages = append(stages, bson.D{{Key: "$match", Value: bson.D{{Key: "username", Value: body.Username}}}, {Key: "$limit", Value: 1}})
+		data := accountStorage.GetAccountBy(db, stages)
+		if data[0].Email == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  httpStatusCode.UNAUTHORIZED,
 				"message": httpMessage.ERROR_ACCOUNT_NOT_FOUND,
@@ -62,9 +63,9 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 			return
 		}
 		var hasedPassword []byte
-		for i := range data.Credentials {
-			if int(data.Credentials[i].Provider) == int(accountModel.PASSWORD) {
-				hasedPassword = []byte(data.Credentials[i].Password)
+		for i := range data[0].Credentials {
+			if int(data[0].Credentials[i].Provider) == int(accountModel.PASSWORD) {
+				hasedPassword = []byte(data[0].Credentials[i].Password)
 				break
 			}
 		}
@@ -75,7 +76,7 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 			})
 			return
 		}
-		accessToken, atError := AccessTokenGenerator(data)
+		accessToken, atError := AccessTokenGenerator(data[0])
 		if atError == nil {
 			c.JSON(http.StatusOK, gin.H{
 				"status": http.StatusOK,

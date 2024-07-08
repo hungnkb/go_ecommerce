@@ -2,7 +2,7 @@ package authController
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/hungnkb/go_ecommerce/src/modules/auth/authHandler"
+	"github.com/hungnkb/go_ecommerce/src/modules/auth/handlers"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

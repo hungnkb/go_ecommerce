@@ -74,9 +74,23 @@ func GetAccountList(client *mongo.Client, filter bson.M, page int64, limit int64
 
 }
 
-func GetAccountBy(client *mongo.Client, filter bson.D) accountModel.Account {
-	var result accountModel.Account
-	storage.GetColection(client, accountCollection).FindOne(context.TODO(), filter).Decode(&result)
+func GetAccountBy(client *mongo.Client, stages []bson.D) []accountModel.Account {
+	var result []accountModel.Account
+	lookupStage := bson.D{
+		{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "permissions"},
+			{Key: "localField", Value: "permission_ids"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "permissions"}},
+		},
+	}
+	stages = append(stages, lookupStage)
+	if cur, errCur := storage.GetColection(client, accountCollection).Aggregate(context.TODO(), mongo.Pipeline(stages)); errCur == nil {
+		fmt.Println(123)
+		cur.All(context.TODO(), &result)
+	} else {
+		fmt.Println(errCur.Error())
+	}
 	return result
 }
 
