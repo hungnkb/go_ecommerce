@@ -53,9 +53,9 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 			})
 		}
 		var stages []bson.D
-		stages = append(stages, bson.D{{Key: "$match", Value: bson.D{{Key: "username", Value: body.Username}}}, {Key: "$limit", Value: 1}})
+		stages = append(stages, bson.D{{Key: "$match", Value: bson.D{{Key: "username", Value: body.Username}}}}, bson.D{{Key: "$limit", Value: 1}})
 		data := accountStorage.GetAccountBy(db, stages)
-		if data[0].Email == "" {
+		if len(data) == 0 {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  httpStatusCode.UNAUTHORIZED,
 				"message": httpMessage.ERROR_ACCOUNT_NOT_FOUND,
@@ -81,7 +81,7 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 			c.JSON(http.StatusOK, gin.H{
 				"status": http.StatusOK,
 				"data": gin.H{
-					"accessToken": accessToken,
+					"accessToken": "Bearer " + accessToken,
 				},
 			})
 		} else {

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -33,6 +34,7 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 			})
 			c.Abort()
 		}
+		fmt.Println(222,token)
 		payload, verifyError := authService.AccessTokenVerify(string(token[1]))
 		if verifyError != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -67,7 +69,8 @@ func AuthGuard(db *mongo.Client) gin.HandlerFunc {
 		var stages []bson.D
 		stages = append(stages, filterStage)
 		account := accountStorage.GetAccountBy(db, stages)
-		if account[0].Email == "" {
+		fmt.Println(111333,account)
+		if len(account) == 0 {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"status":  http.StatusUnauthorized,
 				"message": httpMessage.ERROR_UNAUTHORIZED,

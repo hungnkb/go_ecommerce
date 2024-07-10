@@ -86,7 +86,6 @@ func GetAccountBy(client *mongo.Client, stages []bson.D) []accountModel.Account 
 	}
 	stages = append(stages, lookupStage)
 	if cur, errCur := storage.GetColection(client, accountCollection).Aggregate(context.TODO(), mongo.Pipeline(stages)); errCur == nil {
-		fmt.Println(123)
 		cur.All(context.TODO(), &result)
 	} else {
 		fmt.Println(errCur.Error())

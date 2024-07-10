@@ -20,6 +20,7 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"}
 	corsConfig.AllowCredentials = true
+	corsConfig.AllowHeaders = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
 	db := accountStorage.NewMongoStorage()
