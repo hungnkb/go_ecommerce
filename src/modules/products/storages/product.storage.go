@@ -55,9 +55,31 @@ func InsertProduct(db *mongo.Client, input ProductInput, account accountModel.Ac
 			}
 		}
 	}
-
+	var data productModel.Product
+	fmt.Println(222, idProduct)
+	cursor, errGetResult := storage.GetColection(db, productCollectionName).Aggregate(context.TODO(), mongo.Pipeline{
+		bson.D{{Key: "$match", Value: bson.D{{Key: "_id", Value: idProduct}}}},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "product_metadata"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "product_id"},
+			{Key: "as", Value: "productMetadata"}},
+		}},
+	})
+	if errGetResult != nil {
+		fmt.Println(errGetResult.Error())
+		return responseType.StorageReponseType{
+			HttpStatusCode: http.StatusBadRequest,
+			Error:          errGetResult.Error(),
+		}
+	}
+	var testData productModel.Product
+	storage.GetColection(db, productCollectionName).FindOne(context.TODO(), bson.M{"_id": idProduct}).Decode(&testData)
+	fmt.Println(555, testData)
+	cursor.All(context.TODO(), &data)
 	return responseType.StorageReponseType{
 		HttpStatusCode: http.StatusOK,
+		Data:           data,
 	}
 }
 

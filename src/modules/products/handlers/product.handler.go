@@ -22,7 +22,9 @@ func Create(db *mongo.Client) gin.HandlerFunc {
 		response := productStorage.InsertProduct(db, input, account)
 		if response.Error != "" {
 			c.JSON(response.HttpStatusCode, gin.H{"message": response.Error})
+			return
 		}
+		c.JSON(response.HttpStatusCode, gin.H{"data": response.Data})
 	}
 }
 
