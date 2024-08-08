@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/fatih/color"
 	httpMessage "github.com/hungnkb/go_ecommerce/src/common/httpCommon/http-error-message"
 	"github.com/hungnkb/go_ecommerce/src/common/query"
 	responseType "github.com/hungnkb/go_ecommerce/src/common/types"
@@ -88,7 +89,7 @@ func GetAccountBy(client *mongo.Client, stages []bson.D) []accountModel.Account 
 	if cur, errCur := storage.GetColection(client, accountCollection).Aggregate(context.TODO(), mongo.Pipeline(stages)); errCur == nil {
 		cur.All(context.TODO(), &result)
 	} else {
-		fmt.Println(errCur.Error())
+		color.Red(errCur.Error())
 	}
 	return result
 }
@@ -98,13 +99,12 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 	findQuery := bson.D{primitive.E{Key: "$or",
 		Value: []interface{}{
 			bson.D{{Key: "username", Value: account.Username}},
-			bson.D{{Key: "email", Value: account.Email}},
-			bson.D{{Key: "phone", Value: account.Phone}},
 		},
 	}}
 	checkExistError := storage.GetColection(client, accountCollection).FindOne(context.TODO(), findQuery).Decode(&result)
+
 	if checkExistError == nil {
-		fmt.Println("InsertAccount/checkExistError", result)
+		color.Red("InsertAccount/checkExistError", result)
 		return responseType.StorageReponseType{
 			Error:          string(httpMessage.ERROR_ACCOUNT_EXIST),
 			HttpStatusCode: http.StatusConflict,
@@ -114,7 +114,7 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 	hashCost := Config.Get().Salt
 	hashPassword, hashError := bcrypt.GenerateFromPassword([]byte(account.Password), hashCost)
 	if hashError != nil {
-		fmt.Println("InsertAccount/hashError", hashError.Error())
+		color.Red("InsertAccount/hashError", hashError.Error())
 		return responseType.StorageReponseType{
 			Error:          "Hash password failed",
 			HttpStatusCode: http.StatusOK,
@@ -139,7 +139,7 @@ func InsertAccount(client *mongo.Client, account accountModel.Account) responseT
 	account.UpdatedAt = primitive.DateTime(time.Now().UnixMilli())
 	insertResult, insertError := storage.GetColection(client, accountCollection).InsertOne(context.TODO(), &account)
 	if insertError != nil {
-		fmt.Println("InsertAccount/insertError", insertError.Error())
+		color.Red("InsertAccount/insertError", insertError.Error())
 		return responseType.StorageReponseType{
 			Error:          "Something went wrong",
 			HttpStatusCode: http.StatusBadRequest,

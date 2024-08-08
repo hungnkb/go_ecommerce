@@ -2,6 +2,7 @@ package productHandler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	accountModel "github.com/hungnkb/go_ecommerce/src/modules/accounts/models"
@@ -22,5 +23,32 @@ func Create(db *mongo.Client) gin.HandlerFunc {
 		if response.Error != "" {
 			c.JSON(response.HttpStatusCode, gin.H{"message": response.Error})
 		}
+	}
+}
+
+func GetList(db *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		page := c.Query("page")
+		limit := c.Query("limit")
+		keywords := c.Query("keywords")
+		if page == "" {
+			page = "1"
+		}
+		if limit == "" {
+			limit = "24"
+		}
+		limitInt, _ := strconv.ParseInt(limit, 10, 64)
+		pageInt, _ := strconv.ParseInt(page, 10, 64)
+		// if sort == "" {
+		// 	sort = ""
+		// }
+		response := productStorage.ProductGetList(db, pageInt, limitInt, keywords)
+		if response.Error != "" {
+			c.JSON(response.HttpStatusCode, gin.H{"message": response.Error})
+			return
+		}
+		c.JSON(response.HttpStatusCode, gin.H{
+			"data": response.Data,
+		})
 	}
 }

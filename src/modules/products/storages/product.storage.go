@@ -35,6 +35,7 @@ func InsertProduct(db *mongo.Client, input ProductInput, account accountModel.Ac
 	input.Product.AccountId = account.ID
 	_, productErr := storage.GetColection(db, productCollectionName).InsertOne(context.TODO(), input.Product)
 	if productErr != nil {
+		fmt.Println(productErr.Error())
 		return responseType.StorageReponseType{
 			Error:          httpMessage.ERROR_INSERT_PRODUCT,
 			HttpStatusCode: http.StatusBadRequest,
@@ -46,18 +47,53 @@ func InsertProduct(db *mongo.Client, input ProductInput, account accountModel.Ac
 			metadata.ProductId = idProduct
 			productMetadataFormated = append(productMetadataFormated, metadata)
 		}
-		resultMetadata, errMetadata := storage.GetColection(db, productMetadataCollectionName).InsertMany(context.TODO(), productMetadataFormated)
-		if errMetadata == nil {
-			fmt.Print(666, errMetadata)
+		_, errMetadata := storage.GetColection(db, productMetadataCollectionName).InsertMany(context.TODO(), productMetadataFormated)
+		if errMetadata != nil {
 			return responseType.StorageReponseType{
 				Error:          httpMessage.ERROR_INSERT_PRODUCT_METADATA,
 				HttpStatusCode: http.StatusBadRequest,
 			}
 		}
-		fmt.Println(777, resultMetadata.InsertedIDs)
 	}
 
-	return responseType.StorageReponseType{}
+	return responseType.StorageReponseType{
+		HttpStatusCode: http.StatusOK,
+	}
+}
+
+func ProductGetList(db *mongo.Client, page, limit int64, keywords string) responseType.StorageReponseType {
+	var result []productModel.Product
+	lookupDocumentStage := bson.D{
+		{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "documents"},
+			{Key: "localField", Value: "document_ids"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "documents"},
+		}},
+	}
+	lookupMedataStage := bson.D{
+		{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "product_metadata"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "product_id"},
+			{Key: "as", Value: "productMetadata"},
+		}},
+	}
+	limitStage := bson.D{
+		{Key: "$limit", Value: limit},
+	}
+	skipStage := bson.D{
+		{Key: "$skip", Value: (page - 1) * limit},
+	}
+	cursor, err := storage.GetColection(db, productCollectionName).Aggregate(context.TODO(), mongo.Pipeline{lookupDocumentStage, lookupMedataStage, limitStage, skipStage})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	cursor.All(context.TODO(), &result)
+	return responseType.StorageReponseType{
+		HttpStatusCode: http.StatusOK,
+		Data:           result,
+	}
 }
 
 // func InsertBulkProductMetadata(db *mongo.Client, input []ProductMetadata) {
@@ -67,7 +103,7 @@ func InsertProduct(db *mongo.Client, input ProductInput, account accountModel.Ac
 func InsertAttributeBulk(db *mongo.Client, input []productModel.ProductAttribute, account accountModel.Account) responseType.StorageReponseType {
 	var inputFormat []interface{}
 	for _, item := range input {
-		if account.ID != primitive.NilObjectID {
+		if account.ID != primitive.NilObjectID && account.IsShop {
 			item.AccountId = account.ID
 		}
 		inputFormat = append(inputFormat, item)

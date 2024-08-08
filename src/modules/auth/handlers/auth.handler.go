@@ -81,7 +81,7 @@ func LoginByPassword(db *mongo.Client) gin.HandlerFunc {
 			c.JSON(http.StatusOK, gin.H{
 				"status": http.StatusOK,
 				"data": gin.H{
-					"accessToken": "Bearer " + accessToken,
+					"accessToken": accessToken,
 				},
 			})
 		} else {

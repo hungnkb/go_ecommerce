@@ -20,11 +20,11 @@ type Credential struct {
 type Account struct {
 	ID            primitive.ObjectID   `json:"id,omitempty" bson:"_id,omitempty"`
 	Username      string               `json:"username" binding:"required"`
-	Name          string               `json:"name" binding:"required"`
-	Dob           primitive.DateTime   `json:"dob" binding:"required"`
-	Gender        string               `json:"gender" binding:"required"`
-	Email         string               `json:"email" binding:"required"`
-	Phone         string               `json:"phone" binding:"required"`
+	Name          string               `json:"name"`
+	Dob           primitive.DateTime   `json:"dob"`
+	Gender        string               `json:"gender"`
+	Email         string               `json:"email"`
+	Phone         string               `json:"phone"`
 	ProvinceCode  string               `json:"provinceCode" bson:"province_code"`
 	DistrictCode  string               `json:"districtCode" bson:"district_code"`
 	WardCode      string               `json:"wardCode" bson:"ward_code"`

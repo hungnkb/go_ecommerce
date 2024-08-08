@@ -10,7 +10,7 @@ import (
 func Product(db *mongo.Client, r *gin.RouterGroup) {
 	productRoute := r.Group("/products")
 	productRoute.POST("/", middleware.AuthGuard(db), productHandler.Create(db))
-	productRoute.GET("/")
+	productRoute.GET("/", productHandler.GetList(db))
 	productRoute.GET("/:id")
 	productRoute.PUT("/:id")
 	productRoute.DELETE("/")

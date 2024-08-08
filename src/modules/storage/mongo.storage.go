@@ -2,11 +2,11 @@ package storage
 
 import (
 	"context"
-	"log"
-
+	"github.com/fatih/color"
 	Config "github.com/hungnkb/go_ecommerce/src/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 )
 
 var DB = Config.Get().DbName
@@ -17,7 +17,7 @@ func NewMongoStorage() *mongo.Client {
 	options2 := options.Client().ApplyURI(mongodbUrl)
 	client, err := mongo.Connect(ctx, options2)
 	if err != nil {
-		println("MongoDb connect failed!")
+		color.Green("MongoDb connect failed!")
 		return nil
 	}
 	err = client.Ping(ctx, nil)
@@ -25,7 +25,7 @@ func NewMongoStorage() *mongo.Client {
 		log.Fatal(err)
 		return nil
 	}
-	println("MongoDb connected!")
+	color.Green("MongoDb connected!")
 	return client
 }
 
