@@ -17,4 +17,8 @@ func Product(db *mongo.Client, r *gin.RouterGroup) {
 
 	productRoute.POST("/attributes", middleware.AuthGuard(db), productHandler.CreateAttributeBulk(db))
 	productRoute.GET("/attributes", middleware.AuthGuard(db), productHandler.CreateAttributeBulk(db))
+
+	productRoute.GET("/categories", productHandler.GetListCategory(db))
+	productRoute.POST("/categories", middleware.AuthGuard(db), productHandler.CreateCategory(db))
+	productRoute.GET("/categories/:id")
 }

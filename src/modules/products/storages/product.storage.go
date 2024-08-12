@@ -21,6 +21,7 @@ const (
 	productCollectionName         = "products"
 	productMetadataCollectionName = "product_metadata"
 	attributeCollectionName       = "attributes"
+	categoryCollectionName        = "categories"
 )
 
 type ProductInput struct {
