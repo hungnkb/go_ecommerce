@@ -17,7 +17,7 @@ import (
 )
 
 func InsertCategory(db *mongo.Client, input productModel.Category) responseType.StorageReponseType {
-	input.Slug = strings.ReplaceAll(input.Name, " ", "-") + "-" + strconv.Itoa(int(time.Now().UnixMilli()))
+	input.Slug = strings.ReplaceAll(strings.ToLower(input.Name), " ", "-") + "-" + strconv.Itoa(int(time.Now().UnixMilli()))
 	result, err := storage.GetColection(db, categoryCollectionName).InsertOne(context.TODO(), input)
 	if err != nil {
 		return responseType.StorageReponseType{
@@ -51,7 +51,8 @@ func GetListCategory(db *mongo.Client, page, limit int, parentId string) respons
 	if parentId == "null" {
 		filterStage = bson.D{{Key: "$match", Value: bson.D{{Key: "parent_id", Value: nil}}}}
 	} else {
-		filterStage = bson.D{{Key: "$match", Value: bson.D{{Key: "parent_id", Value: parentId}}}}
+		parentObjId, _ := primitive.ObjectIDFromHex(parentId)
+		filterStage = bson.D{{Key: "$match", Value: bson.D{{Key: "parent_id", Value: parentObjId}}}}
 	}
 	cursor, err := storage.GetColection(db, categoryCollectionName).Aggregate(context.TODO(), mongo.Pipeline{limitStage, skipStage, filterStage})
 	if err != nil {
