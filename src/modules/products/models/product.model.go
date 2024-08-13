@@ -27,14 +27,15 @@ type ProductMetadata struct {
 }
 
 type Product struct {
-	ID              primitive.ObjectID       `json:"id,omitempty" bson:"_id,omitempty"`
-	Name            string                   `json:"name" binding:"required"`
-	Slug            string                   `json:"slug"`
-	Price           float64                  `json:"price" binding:"required"`
-	Description     string                   `json:"description"`
-	AccountId       primitive.ObjectID       `json:"accountId" bson:"account_id"`
-	ProductMetadata []ProductMetadata        `json:"productMetadata"`
-	DocumentIds     []primitive.ObjectID     `json:"documentIds" bson:"document_ids"`
-	Documents       []documentModel.Document `json:"documents"`
-	ThumbnailId     primitive.ObjectID       `json:"thumbnailId" bson:"thumbnail_id"`
+	ID               primitive.ObjectID       `json:"id,omitempty" bson:"_id,omitempty"`
+	Name             string                   `json:"name" binding:"required"`
+	Slug             string                   `json:"slug"`
+	Price            float64                  `json:"price" binding:"required"`
+	Description      string                   `json:"description"`
+	AccountId        primitive.ObjectID       `json:"accountId" bson:"account_id"`
+	ProductMetadata  []ProductMetadata        `json:"productMetadata"`
+	DocumentIds      []primitive.ObjectID     `json:"documentIds" bson:"document_ids"`
+	Documents        []documentModel.Document `json:"documents"`
+	ThumbnailId      primitive.ObjectID       `json:"thumbnailId" bson:"thumbnail_id"`
+	ProductAttribute []ProductAttribute       `json:"productAttribute"`
 }

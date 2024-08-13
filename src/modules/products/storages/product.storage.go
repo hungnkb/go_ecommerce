@@ -158,3 +158,31 @@ func InsertAttributeBulk(db *mongo.Client, input []productModel.ProductAttribute
 		HttpStatusCode: http.StatusOK,
 	}
 }
+
+func GetProductBySlug(db *mongo.Client, slug string) responseType.StorageReponseType {
+	var data productModel.Product
+	filter := bson.D{{Key: "$match", Value: bson.D{{Key: "slug", Value: slug}}}}
+	documentLookup := bson.D{{
+		Key: "$lookup",
+		Value: bson.D{
+			{Key: "from", Value: "documents"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "document_ids"},
+			{Key: "as", Value: "documents"},
+		},
+	}}
+	cursor, err := storage.GetColection(db, productCollectionName).Aggregate(context.TODO(), mongo.Pipeline{filter, documentLookup})
+	if err != nil {
+		fmt.Println(err.Error())
+		return responseType.StorageReponseType{
+			HttpStatusCode: http.StatusBadRequest,
+			Error:          err.Error(),
+		}
+	}
+	cursor.Decode(&data)
+	return responseType.StorageReponseType{
+		Data:           data,
+		Error:          "",
+		HttpStatusCode: http.StatusOK,
+	}
+}

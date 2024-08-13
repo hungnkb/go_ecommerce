@@ -28,5 +28,21 @@ func CreateAttributeBulk(db *mongo.Client) gin.HandlerFunc {
 			"data":   res.Data,
 		})
 	}
+}
 
+func GetProductBySlug(db *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		slug := c.Param("slug")
+		res := productStorage.GetProductBySlug(db, slug)
+		if res.Error != "" {
+			c.JSON(res.HttpStatusCode, gin.H{
+				"message": res.Error,
+				"data":    nil,
+			})
+			return
+		}
+		c.JSON(res.HttpStatusCode, gin.H{
+			"data": res.Data,
+		})
+	}
 }
