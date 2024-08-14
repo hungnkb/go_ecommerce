@@ -166,8 +166,8 @@ func GetProductBySlug(db *mongo.Client, slug string) responseType.StorageReponse
 		Key: "$lookup",
 		Value: bson.D{
 			{Key: "from", Value: "documents"},
-			{Key: "localField", Value: "_id"},
-			{Key: "foreignField", Value: "document_ids"},
+			{Key: "localField", Value: "document_ids"},
+			{Key: "foreignField", Value: "_id"},
 			{Key: "as", Value: "documents"},
 		},
 	}}
@@ -179,6 +179,7 @@ func GetProductBySlug(db *mongo.Client, slug string) responseType.StorageReponse
 			Error:          err.Error(),
 		}
 	}
+	cursor.Next(context.TODO())
 	cursor.Decode(&data)
 	return responseType.StorageReponseType{
 		Data:           data,
