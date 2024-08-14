@@ -161,17 +161,69 @@ func InsertAttributeBulk(db *mongo.Client, input []productModel.ProductAttribute
 
 func GetProductBySlug(db *mongo.Client, slug string) responseType.StorageReponseType {
 	var data productModel.Product
-	filter := bson.D{{Key: "$match", Value: bson.D{{Key: "slug", Value: slug}}}}
-	documentLookup := bson.D{{
-		Key: "$lookup",
-		Value: bson.D{
+	// filter := bson.D{{Key: "$match", Value: bson.D{{Key: "slug", Value: slug}}}}
+	// documentLookup := bson.D{{
+	// 	Key: "$lookup",
+	// 	Value: bson.D{
+	// 		{Key: "from", Value: "documents"},
+	// 		{Key: "localField", Value: "document_ids"},
+	// 		{Key: "foreignField", Value: "_id"},
+	// 		{Key: "as", Value: "documents"},
+	// 	},
+	// }}
+	// metadataLookup := bson.D{{Key: "$lookup", Value: bson.D{
+	// 	{Key: "from", Value: "product_metadata"},
+	// 	{Key: "localField", Value: "_id"},
+	// 	{Key: "foreignField", Value: "product_id"},
+	// 	{Key: "as", Value: "productmetadata"},
+	// },
+	// }}
+	// attributesLookup := bson.D{{Key: "$lookup", Value: bson.D{
+	// 	{Key: "from", Value: "attributes"},
+	// 	{Key: "localField", Value: "product_metadata.attribute_id"},
+	// 	{Key: "foreignField", Value: "_id"},
+	// 	{Key: "as", Value: "product_metadata.attributes"},
+	// }}}
+	// unwind := bson.D{{Key: "$unwind", Value: "$product_metadata"}}
+	// unwind2 := bson.D{{Key: "$unwind", Value: "$product_metadata.attributes"}}
+
+	pipeline := bson.A{
+		bson.D{{Key: "$lookup", Value: bson.D{
 			{Key: "from", Value: "documents"},
 			{Key: "localField", Value: "document_ids"},
 			{Key: "foreignField", Value: "_id"},
 			{Key: "as", Value: "documents"},
+		}}},
+		bson.D{
+			{Key: "$lookup",
+				Value: bson.D{
+					{Key: "as", Value: "product_metadata"},
+					{Key: "from", Value: "product_metadata"},
+					{Key: "foreignField", Value: "product_id"},
+					{Key: "localField", Value: "_id"},
+				},
+			},
 		},
-	}}
-	cursor, err := storage.GetColection(db, productCollectionName).Aggregate(context.TODO(), mongo.Pipeline{filter, documentLookup})
+		bson.D{{Key: "$unwind", Value: bson.D{{Key: "path", Value: "$product_metadata"}}}},
+		bson.D{
+			{Key: "$lookup",
+				Value: bson.D{
+					{Key: "as", Value: "product_metadata.attributes"},
+					{Key: "from", Value: "attributes"},
+					{Key: "foreignField", Value: "_id"},
+					{Key: "localField", Value: "product_metadata.attribute_id"},
+				},
+			},
+		},
+		bson.D{{Key: "$unwind", Value: bson.D{{Key: "path", Value: "$product_metadata.attributes"}}}},
+		bson.D{{Key: "$match", Value: bson.D{{Key: "slug", Value: slug}}}},
+		bson.D{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$_id"},
+			{Key: "productMetadata", Value: bson.D{{Key: "$push", Value: "$product_metadata"}}},
+		}}},
+	}
+
+	cursor, err := storage.GetColection(db, productCollectionName).Aggregate(context.TODO(), pipeline)
 	if err != nil {
 		fmt.Println(err.Error())
 		return responseType.StorageReponseType{
