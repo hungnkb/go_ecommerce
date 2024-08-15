@@ -219,7 +219,11 @@ func GetProductBySlug(db *mongo.Client, slug string) responseType.StorageReponse
 		bson.D{{Key: "$match", Value: bson.D{{Key: "slug", Value: slug}}}},
 		bson.D{{Key: "$group", Value: bson.D{
 			{Key: "_id", Value: "$_id"},
-			{Key: "productMetadata", Value: bson.D{{Key: "$push", Value: "$product_metadata"}}},
+			{Key: "productmetadata", Value: bson.D{{Key: "$push", Value: "$product_metadata"}}},
+			{Key: "allFields", Value: bson.D{{Key: "$first", Value: "$$ROOT"}}},
+		}}},
+		bson.D{{Key: "$replaceRoot", Value: bson.D{
+			{Key: "newRoot", Value: bson.D{{Key: "$mergeObjects", Value: bson.A{"$allFields", bson.D{{Key: "productMetadata", Value: "$productmetadata"}}}}}},
 		}}},
 	}
 
